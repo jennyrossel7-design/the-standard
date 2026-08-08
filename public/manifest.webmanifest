@@ -1,0 +1,9 @@
+{
+  "name": "The Standard",
+  "short_name": "The Standard",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7F3EC",
+  "theme_color": "#F7F3EC",
+  "description": "A private practice for returning to yourself."
+}

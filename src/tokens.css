@@ -1,0 +1,67 @@
+/* The Standard — design tokens (source of truth: build brief §9 + validated Phase 1 prototype) */
+
+:root {
+  /* Light palette */
+  --bg: #F7F3EC;            /* warm ivory background */
+  --surface: #FFFCF7;       /* paper surface */
+  --surface-sand: #E8DED1;  /* sand surface */
+  --taupe: #B7A696;
+  --olive: #7D8168;
+  --ink: #332B27;           /* espresso text */
+  --ink-soft: #746A63;      /* warm gray text — AA on bg (4.77:1) and surface (5.15:1) */
+  --gold: #B4935A;          /* aged gold accent — decorative only, not for small text */
+  --gold-text: #8A6F3F;     /* darkened gold, AA-safe for small labels */
+  --blue: #718995;          /* coastal blue, rare */
+  --rose: #B88E84;          /* soft rose, rare */
+  --border: #E5DACA;
+  --danger-soft: #A2705F;   /* muted, never alarming */
+
+  /* Type */
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-ui: "Source Sans 3", -apple-system, "Segoe UI", sans-serif;
+  --size-h1: 33px;
+  --size-h2: 24px;
+  --size-body: 16px;
+  --size-small: 13.5px;
+  --size-label: 11px;
+  --tracking-label: 0.14em;
+
+  /* Space & shape */
+  --space-1: 6px;
+  --space-2: 12px;
+  --space-3: 20px;
+  --space-4: 32px;
+  --space-5: 52px;
+  --radius-card: 14px;
+  --radius-pill: 999px;
+  --radius-input: 12px;
+  --shadow-card: 0 1px 2px rgba(51, 43, 39, 0.05), 0 4px 16px rgba(51, 43, 39, 0.04);
+
+  /* Motion — slow fades, soft rises; honored only when motion is allowed */
+  --ease-gentle: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --dur-fade: 420ms;
+  --dur-rise: 520ms;
+
+  /* Touch */
+  --touch-min: 44px;
+}
+
+[data-theme="dark"] {
+  --bg: #211C1A;            /* deep espresso */
+  --surface: #2C2623;       /* warm charcoal */
+  --surface-sand: #362F2B;
+  --ink: #F2EADF;           /* soft parchment */
+  --ink-soft: #B5A99C;
+  --gold: #BFA06A;
+  --gold-text: #C9AE7C;
+  --olive: #626750;
+  --border: #3E362F;
+  --shadow-card: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fade: 0ms;
+    --dur-rise: 0ms;
+  }
+}
