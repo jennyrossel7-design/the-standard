@@ -73,6 +73,9 @@ export interface VisionTile extends Syncable {
   type: "image" | "text" | "quote" | "color";
   content: string;
   imagePath?: string; // Supabase Storage path; image bytes cached locally in IndexedDB
+  imageUrl?: string; // remote image, used when the bytes could not be cached locally
+  credit?: string; // photographer name (Unsplash attribution)
+  creditUrl?: string; // link to the photographer's profile
   caption?: string;
   whyItMatters?: string;
   dimensionId?: string;
