@@ -20,6 +20,7 @@ jobs:
     env:
       VITE_SUPABASE_URL: https://vtybqczpnjelldmwvhio.supabase.co
       VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0eWJxY3pwbmplbGxkbXd2aGlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyMTY1NDMsImV4cCI6MjEwMTc5MjU0M30.YVeokwezsuP-n1gnvX8cFMrJUmitXu5pzu7fX-mTU4Y
+      VITE_UNSPLASH_KEY: R_kYo01A2MYwzm_PJBv2uQeZUhivj23WarQR_x3O_WM
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
