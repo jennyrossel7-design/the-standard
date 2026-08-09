@@ -3,6 +3,8 @@ import { useCollection } from "../lib/hooks";
 import { put, remove, newId, putImage, getImage } from "../lib/store";
 import { supabase } from "../lib/sync";
 import type { FutureScene, LifeDimension, VisionTile } from "../types";
+import { PhotoPicker, QuotePicker, ColorPicker } from "./VisionPickers";
+import { registerDownload, type UnsplashPhoto } from "../lib/library";
 
 const SCENE_PROMPTS = [
   "Where are you?",
@@ -50,16 +52,50 @@ function Board({ tiles }: { tiles: VisionTile[] }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [editing, setEditing] = useState<VisionTile | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [picker, setPicker] = useState<"none" | "photo" | "quote" | "color">("none");
 
-  async function addTile(type: VisionTile["type"], content = "") {
+  async function addTile(
+    type: VisionTile["type"], content = "", extra: Partial<VisionTile> = {}
+  ) {
     const iso = new Date().toISOString();
     const tile: VisionTile = {
       id: newId(), updatedAt: iso, type, content,
       size: type === "image" ? "medium" : "small",
       order: tiles.length, favorite: false, archived: false,
+      ...extra,
     };
     await put("vision_tiles", tile);
-    setEditing(tile);
+    return tile;
+  }
+
+  /** Add a photograph from the library: cache the bytes locally when possible so
+   *  the board stays private and works offline, and keep the credit with the tile. */
+  async function addFromLibrary(photo: UnsplashPhoto) {
+    registerDownload(photo);
+    const id = newId();
+    const iso = new Date().toISOString();
+    const base: VisionTile = {
+      id, updatedAt: iso, type: "image", content: "",
+      caption: photo.alt || undefined,
+      credit: photo.credit, creditUrl: photo.creditUrl,
+      size: "medium", order: tiles.length, favorite: false, archived: false,
+    };
+    try {
+      const res = await fetch(photo.full);
+      if (!res.ok) throw new Error("fetch failed");
+      const blob = await res.blob();
+      const path = `${id}.jpg`;
+      await putImage(path, blob);
+      await put("vision_tiles", { ...base, imagePath: path });
+      if (supabase) {
+        const { data } = await supabase.auth.getUser();
+        const uid = data.user?.id;
+        if (uid) void supabase.storage.from("vision").upload(`${uid}/${path}`, blob, { upsert: true });
+      }
+    } catch {
+      // Could not cache it — keep the remote image rather than failing.
+      await put("vision_tiles", { ...base, imageUrl: photo.full });
+    }
   }
 
   async function onFiles(files: FileList | null) {
@@ -105,10 +141,10 @@ function Board({ tiles }: { tiles: VisionTile[] }) {
           Drag tiles to rearrange. Click a tile to edit its size, dimension, and why it matters.
         </p>
         <div className="pill-row">
-          <button className="pill" onClick={() => fileRef.current?.click()}>Add image</button>
-          <button className="pill" onClick={() => void addTile("text")}>Add words</button>
-          <button className="pill" onClick={() => void addTile("quote")}>Add a quote</button>
-          <button className="pill" onClick={() => void addTile("color")}>Add a color</button>
+          <button className="pill" onClick={() => setPicker("photo")}>Photo library</button>
+          <button className="pill" onClick={() => fileRef.current?.click()}>Upload my own</button>
+          <button className="pill" onClick={() => setPicker("quote")}>Words</button>
+          <button className="pill" onClick={() => setPicker("color")}>Colors</button>
           <input
             ref={fileRef}
             type="file"
@@ -153,6 +189,22 @@ function Board({ tiles }: { tiles: VisionTile[] }) {
           onClose={() => setEditing(null)}
         />
       )}
+
+      {picker === "photo" && (
+        <PhotoPicker onPick={addFromLibrary} onClose={() => setPicker("none")} />
+      )}
+      {picker === "quote" && (
+        <QuotePicker
+          onPick={async (text) => { await addTile("quote", text); }}
+          onClose={() => setPicker("none")}
+        />
+      )}
+      {picker === "color" && (
+        <ColorPicker
+          onPick={async (hex) => { await addTile("color", hex); }}
+          onClose={() => setPicker("none")}
+        />
+      )}
     </>
   );
 }
@@ -170,9 +222,14 @@ function TileContent({ tile }: { tile: VisionTile }) {
   }, [tile.imagePath]);
 
   if (tile.type === "image") {
-    return url
-      ? <img src={url} alt={tile.caption || "Vision board image"} />
-      : <div className="tile-placeholder"><span>{tile.caption || "Image"}</span></div>;
+    const src = url ?? tile.imageUrl ?? null;
+    if (!src) return <div className="tile-placeholder"><span>{tile.caption || "Image"}</span></div>;
+    return (
+      <>
+        <img src={src} alt={tile.caption || "Vision board image"} />
+        {tile.credit && <span className="tile-credit">{tile.credit}</span>}
+      </>
+    );
   }
   if (tile.type === "color") {
     return <div className="tile-color" style={{ background: tile.content || "var(--surface-sand)" }} />;
